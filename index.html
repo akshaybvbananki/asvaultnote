@@ -11,11 +11,15 @@ input{width:100%;padding:12px;margin:8px 0;border:1px solid #334155;border-radiu
 .hidden{display:none}
 .note{background:#334155;padding:10px;border-radius:8px;margin:10px 0;text-align:left}
 .del{background:#ef4444;color:white;border:none;padding:6px 12px;border-radius:6px}
+.logo{width:140px;height:140px;border-radius:20px;margin:20px auto;display:block;object-fit:cover;background:#000}
+.pass-wrap{position:relative}
+.eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:20px}
 </style>
 </head>
 <body>
 
 <div id="page1">
+<img src="logo.png" class="logo" alt="AS Vault Note Logo">
 <h1 style="color:#38bdf8;">AS Vault Note</h1>
 <p>Akshay B V Bananki</p>
 <p>Your Notes, Safe & Secure</p>
@@ -27,7 +31,10 @@ input{width:100%;padding:12px;margin:8px 0;border:1px solid #334155;border-radiu
 <h2 style="text-align:center;color:#38bdf8;">Login / Signup</h2>
 <input id="uid" placeholder="User ID">
 <input id="phone" placeholder="Phone Number">
+<div class="pass-wrap">
 <input id="pass" type="password" placeholder="Password">
+<span class="eye" onclick="togglePass('pass',this)">👁️</span>
+</div>
 <button class="btn" onclick="signup()">Create Account</button>
 <button class="btn" style="background:#10b981" onclick="login()">Login</button>
 <p style="text-align:center"><button onclick="showPage('pageForgot')" style="background:none;border:none;color:#38bdf8;cursor:pointer">Forgot Password?</button></p>
@@ -43,7 +50,10 @@ input{width:100%;padding:12px;margin:8px 0;border:1px solid #334155;border-radiu
 <input id="fphone" placeholder="Phone Number">
 <button class="btn" onclick="sendCode()">Send Code to SMS</button>
 <input id="fcode" placeholder="Enter Code">
+<div class="pass-wrap">
 <input id="newpass" type="password" placeholder="New Password">
+<span class="eye" onclick="togglePass('newpass',this)">👁️</span>
+</div>
 <button class="btn" style="background:#10b981" onclick="resetPass()">Reset Password</button>
 <p id="fmsg" style="text-align:center"></p>
 <button onclick="showPage('page2')" style="background:none;border:none;color:#38bdf8;cursor:pointer;width:100%">← Back to Login</button>
@@ -51,6 +61,7 @@ input{width:100%;padding:12px;margin:8px 0;border:1px solid #334155;border-radiu
 </div>
 
 <div id="page3" class="hidden">
+<img src="logo.png" class="logo" style="width:80px;height:80px" alt="Logo">
 <h1 style="color:#38bdf8;">AS Vault Note</h1>
 <p>Welcome, <b id="welcome"></b> | <button onclick="logout()" style="background:none;border:none;color:#f87171;cursor:pointer">Logout</button></p>
 <div class="card">
@@ -64,6 +75,7 @@ input{width:100%;padding:12px;margin:8px 0;border:1px solid #334155;border-radiu
 <script>
 let tempCode="";
 function showPage(id){['page1','page2','pageForgot','page3'].forEach(p=>document.getElementById(p).classList.add('hidden'));document.getElementById(id).classList.remove('hidden');}
+function togglePass(id,el){ let inp=document.getElementById(id); if(inp.type==='password'){inp.type='text'; el.innerText='🙈';} else {inp.type='password'; el.innerText='👁️';} }
 function signup(){
   let uid=document.getElementById('uid').value.trim(), phone=document.getElementById('phone').value.trim(), pass=document.getElementById('pass').value.trim();
   if(!uid||!phone||!pass){document.getElementById('msg').innerText='Fill all 3 columns';return;}

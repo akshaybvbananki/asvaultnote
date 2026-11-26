@@ -4,94 +4,99 @@
 <title>AS Vault Note</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-body{font-family:sans-serif;text-align:center;padding:20px;background:#f5f5f5;margin:0}
-.btn{background:#2563eb;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;display:inline-block;border:none;cursor:pointer;font-size:16px}
-.card{background:white;max-width:400px;margin:20px auto;padding:20px;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,0.1);text-align:left}
-input{width:100%;padding:12px;margin:8px 0;border:1px solid #ccc;border-radius:8px;box-sizing:border-box}
-.note{background:#eef2ff;padding:10px;border-radius:8px;margin:10px 0;text-align:left}
-.del{background:#ef4444;color:white;border:none;padding:6px 12px;border-radius:6px;cursor:pointer}
+body{font-family:sans-serif;text-align:center;padding:20px;background:#0f172a;color:#fff;margin:0}
+.btn{background:#2563eb;color:white;padding:12px 24px;border-radius:8px;border:none;cursor:pointer;font-size:16px;width:100%;margin:6px 0}
+.card{background:#1e293b;max-width:400px;margin:20px auto;padding:20px;border-radius:12px;text-align:left}
+input{width:100%;padding:12px;margin:8px 0;border:1px solid #334155;border-radius:8px;background:#334155;color:#fff;box-sizing:border-box}
 .hidden{display:none}
+.note{background:#334155;padding:10px;border-radius:8px;margin:10px 0;text-align:left}
+.del{background:#ef4444;color:white;border:none;padding:6px 12px;border-radius:6px}
 </style>
 </head>
 <body>
 
-<!-- PAGE 1: FRONT -->
 <div id="page1">
-<h1 style="color:#2563eb;">AS Vault Note</h1>
-<p style="font-size:18px;">Your Notes, Safe & Secure</p>
-<p>App coming soon!</p>
+<h1 style="color:#38bdf8;">AS Vault Note</h1>
+<p>Akshay B V Bananki</p>
+<p>Your Notes, Safe & Secure</p>
 <button class="btn" onclick="showPage('page2')">Download App</button>
 </div>
 
-<!-- PAGE 2: LOGIN / SIGNUP -->
 <div id="page2" class="hidden">
 <div class="card">
-<h2 style="text-align:center;color:#2563eb;">Login / Signup</h2>
+<h2 style="text-align:center;color:#38bdf8;">Login / Signup</h2>
 <input id="uid" placeholder="User ID">
+<input id="phone" placeholder="Phone Number">
 <input id="pass" type="password" placeholder="Password">
-<button class="btn" style="width:100%" onclick="login()">Login</button>
-<button class="btn" style="width:100%;background:#10b981;margin-top:8px" onclick="signup()">Create Account</button>
-<p id="msg" style="color:red;text-align:center"></p>
-<button onclick="showPage('page1')" style="background:none;border:none;color:#2563eb;cursor:pointer;width:100%">← Back</button>
+<button class="btn" onclick="signup()">Create Account</button>
+<button class="btn" style="background:#10b981" onclick="login()">Login</button>
+<p style="text-align:center"><button onclick="showPage('pageForgot')" style="background:none;border:none;color:#38bdf8;cursor:pointer">Forgot Password?</button></p>
+<p id="msg" style="color:#f87171;text-align:center"></p>
+<button onclick="showPage('page1')" style="background:none;border:none;color:#38bdf8;cursor:pointer;width:100%">← Back</button>
 </div>
 </div>
 
-<!-- PAGE 3: DASHBOARD -->
+<div id="pageForgot" class="hidden">
+<div class="card">
+<h2 style="text-align:center;color:#38bdf8;">Forgot Password</h2>
+<input id="fuid" placeholder="User ID">
+<input id="fphone" placeholder="Phone Number">
+<button class="btn" onclick="sendCode()">Send Code to SMS</button>
+<input id="fcode" placeholder="Enter Code">
+<input id="newpass" type="password" placeholder="New Password">
+<button class="btn" style="background:#10b981" onclick="resetPass()">Reset Password</button>
+<p id="fmsg" style="text-align:center"></p>
+<button onclick="showPage('page2')" style="background:none;border:none;color:#38bdf8;cursor:pointer;width:100%">← Back to Login</button>
+</div>
+</div>
+
 <div id="page3" class="hidden">
-<h1 style="color:#2563eb;">AS Vault Note</h1>
-<p>Welcome, <b id="welcome"></b> | <button onclick="logout()" style="background:none;border:none;color:red;cursor:pointer">Logout</button></p>
+<h1 style="color:#38bdf8;">AS Vault Note</h1>
+<p>Welcome, <b id="welcome"></b> | <button onclick="logout()" style="background:none;border:none;color:#f87171;cursor:pointer">Logout</button></p>
 <div class="card">
 <input id="ntitle" placeholder="Note title">
 <input id="nbody" placeholder="Write your note...">
-<button class="btn" style="width:100%" onclick="addNote()">+ Add Note</button>
+<button class="btn" onclick="addNote()">+ Add Note</button>
 </div>
 <div id="notes" style="max-width:400px;margin:auto"></div>
 </div>
 
 <script>
-function showPage(id){
-  document.getElementById('page1').classList.add('hidden');
-  document.getElementById('page2').classList.add('hidden');
-  document.getElementById('page3').classList.add('hidden');
-  document.getElementById(id).classList.remove('hidden');
-}
+let tempCode="";
+function showPage(id){['page1','page2','pageForgot','page3'].forEach(p=>document.getElementById(p).classList.add('hidden'));document.getElementById(id).classList.remove('hidden');}
 function signup(){
-  let uid=document.getElementById('uid').value.trim();
-  let pass=document.getElementById('pass').value.trim();
-  if(!uid||!pass){document.getElementById('msg').innerText='Enter User ID and Password';return;}
-  localStorage.setItem('user_'+uid, pass);
-  document.getElementById('msg').style.color='green';
-  document.getElementById('msg').innerText='Account created! Now click Login';
+  let uid=document.getElementById('uid').value.trim(), phone=document.getElementById('phone').value.trim(), pass=document.getElementById('pass').value.trim();
+  if(!uid||!phone||!pass){document.getElementById('msg').innerText='Fill all 3 columns';return;}
+  localStorage.setItem('user_'+uid, JSON.stringify({phone:phone,pass:pass}));
+  document.getElementById('msg').style.color='#4ade80'; document.getElementById('msg').innerText='Account created! Now Login';
 }
 function login(){
-  let uid=document.getElementById('uid').value.trim();
-  let pass=document.getElementById('pass').value.trim();
-  let saved=localStorage.getItem('user_'+uid);
-  if(saved && saved===pass){
-    localStorage.setItem('loggedIn', uid);
-    document.getElementById('welcome').innerText=uid;
-    showPage('page3'); renderNotes();
-  }else{
-    document.getElementById('msg').innerText='Wrong User ID or Password';
-  }
+  let uid=document.getElementById('uid').value.trim(), pass=document.getElementById('pass').value.trim();
+  let saved=JSON.parse(localStorage.getItem('user_'+uid)||'null');
+  if(saved && saved.pass===pass){ localStorage.setItem('loggedIn',uid); document.getElementById('welcome').innerText=uid; showPage('page3'); renderNotes(); }
+  else document.getElementById('msg').innerText='Wrong User ID or Password';
+}
+function sendCode(){
+  let uid=document.getElementById('fuid').value.trim(), phone=document.getElementById('fphone').value.trim();
+  let saved=JSON.parse(localStorage.getItem('user_'+uid)||'null');
+  if(!saved || saved.phone!==phone){ document.getElementById('fmsg').style.color='#f87171'; document.getElementById('fmsg').innerText='User ID / Phone not matched'; return; }
+  tempCode=Math.floor(1000+Math.random()*9000).toString();
+  document.getElementById('fmsg').style.color='#4ade80';
+  document.getElementById('fmsg').innerText='Demo SMS Code (real SMS needs backend): '+tempCode;
+}
+function resetPass(){
+  let uid=document.getElementById('fuid').value.trim(), code=document.getElementById('fcode').value.trim(), newpass=document.getElementById('newpass').value.trim();
+  if(code!==tempCode){ document.getElementById('fmsg').style.color='#f87171'; document.getElementById('fmsg').innerText='Wrong Code'; return; }
+  let saved=JSON.parse(localStorage.getItem('user_'+uid)); saved.pass=newpass; localStorage.setItem('user_'+uid, JSON.stringify(saved));
+  document.getElementById('fmsg').style.color='#4ade80'; document.getElementById('fmsg').innerText='Password Reset! Go to Login';
 }
 function logout(){ localStorage.removeItem('loggedIn'); showPage('page1'); }
 function getNotes(){ return JSON.parse(localStorage.getItem('notes_'+localStorage.getItem('loggedIn'))||'[]'); }
 function saveNotes(n){ localStorage.setItem('notes_'+localStorage.getItem('loggedIn'), JSON.stringify(n)); }
-function addNote(){
-  let t=document.getElementById('ntitle').value.trim();
-  let b=document.getElementById('nbody').value.trim();
-  if(!t && !b) return;
-  let notes=getNotes(); notes.unshift({id:Date.now(),t:t||'Untitled',b:b});
-  saveNotes(notes); document.getElementById('ntitle').value=''; document.getElementById('nbody').value=''; renderNotes();
-}
+function addNote(){ let t=document.getElementById('ntitle').value.trim(), b=document.getElementById('nbody').value.trim(); if(!t&&!b) return; let notes=getNotes(); notes.unshift({id:Date.now(),t:t||'Untitled',b:b}); saveNotes(notes); document.getElementById('ntitle').value=''; document.getElementById('nbody').value=''; renderNotes(); }
 function delNote(id){ saveNotes(getNotes().filter(n=>n.id!==id)); renderNotes(); }
-function renderNotes(){
-  let notes=getNotes();
-  document.getElementById('notes').innerHTML=notes.length?notes.map(n=>`<div class="note"><b>${n.t}</b><p>${n.b}</p><button class="del" onclick="delNote(${n.id})">Delete</button></div>`).join(''):'<p>No notes yet</p>';
-}
-let logged=localStorage.getItem('loggedIn');
-if(logged){ document.getElementById('welcome').innerText=logged; showPage('page3'); renderNotes(); }
+function renderNotes(){ let notes=getNotes(); document.getElementById('notes').innerHTML=notes.length?notes.map(n=>`<div class="note"><b>${n.t}</b><p>${n.b}</p><button class="del" onclick="delNote(${n.id})">Delete</button></div>`).join(''):'<p>No notes yet</p>'; }
+let logged=localStorage.getItem('loggedIn'); if(logged){ document.getElementById('welcome').innerText=logged; showPage('page3'); renderNotes(); }
 </script>
 </body>
 </html>

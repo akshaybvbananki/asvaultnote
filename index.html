@@ -4,9 +4,6 @@
 <title>AS Vault Note</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="manifest" href="manifest.json">
-<script>
-if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js'); }
-</script>
 <style>
 body{font-family:sans-serif;text-align:center;padding:20px;background:#0f172a;color:#fff;margin:0}
 .btn{background:#2563eb;color:white;padding:12px 24px;border-radius:8px;border:none;cursor:pointer;font-size:16px;width:100%;margin:6px 0}
@@ -25,7 +22,6 @@ input{width:100%;padding:12px;margin:8px 0;border:1px solid #334155;border-radiu
 </style>
 </head>
 <body>
-
 <div id="page1">
 <h1 style="color:#38bdf8;">AS Vault Note</h1>
 <p>Akshay B V Bananki</p>
@@ -43,11 +39,10 @@ input{width:100%;padding:12px;margin:8px 0;border:1px solid #334155;border-radiu
 <p id="appRateMsg" style="color:#4ade80"></p>
 <input id="feedback" placeholder="Your feedback (optional)">
 <button class="btn" onclick="saveFeedback()">Submit Feedback</button>
-<button class="btn" style="background:#10b981" onclick="shareApp()">📤 Share App</button>
+<button class="btn" style="background:#10b981" onclick="shareApp()">Share App</button>
 <p id="avgRating" style="color:#facc15"></p>
 </div>
 </div>
-
 <div id="page2" class="hidden">
 <div class="card">
 <h2 style="text-align:center;color:#38bdf8;">Login / Signup</h2>
@@ -61,10 +56,9 @@ input{width:100%;padding:12px;margin:8px 0;border:1px solid #334155;border-radiu
 <button class="btn" style="background:#10b981" onclick="login()">Login</button>
 <p style="text-align:center"><button onclick="showPage('pageForgot')" style="background:none;border:none;color:#38bdf8;cursor:pointer">Forgot Password?</button></p>
 <p id="msg" style="color:#f87171;text-align:center"></p>
-<button onclick="showPage('page1')" style="background:none;border:none;color:#38bdf8;cursor:pointer;width:100%">← Back</button>
+<button onclick="showPage('page1')" style="background:none;border:none;color:#38bdf8;cursor:pointer;width:100%">Back</button>
 </div>
 </div>
-
 <div id="pageForgot" class="hidden">
 <div class="card">
 <h2 style="text-align:center;color:#38bdf8;">Forgot Password</h2>
@@ -78,14 +72,42 @@ input{width:100%;padding:12px;margin:8px 0;border:1px solid #334155;border-radiu
 </div>
 <button class="btn" style="background:#10b981" onclick="resetPass()">Reset Password</button>
 <p id="fmsg" style="text-align:center"></p>
-<button onclick="showPage('page2')" style="background:none;border:none;color:#38bdf8;cursor:pointer;width:100%">← Back to Login</button>
+<button onclick="showPage('page2')" style="background:none;border:none;color:#38bdf8;cursor:pointer;width:100%">Back to Login</button>
 </div>
 </div>
-
 <div id="page3" class="hidden">
 <h1 style="color:#38bdf8;">AS Vault Note</h1>
 <p>Welcome, <b id="welcome"></b> | <button onclick="logout()" style="background:none;border:none;color:#f87171;cursor:pointer">Logout</button></p>
 <div class="card">
 <input id="ntitle" placeholder="Note title">
 <input id="nbody" placeholder="Write your note...">
-<input type
+<input type="file" id="nphoto" accept="image/*" style="margin:8px 0">
+<button class="btn" onclick="addNote()">+ Add Note</button>
+</div>
+<div id="notes" style="max-width:400px;margin:auto"></div>
+</div>
+<script>
+let tempCode=""; let myRating=0;
+function showPage(id){['page1','page2','pageForgot','page3'].forEach(p=>document.getElementById(p).classList.add('hidden'));document.getElementById(id).classList.remove('hidden');}
+function togglePass(id,el){let inp=document.getElementById(id); if(inp.type==='password'){inp.type='text'; el.innerText='🙈';} else {inp.type='password'; el.innerText='👁️';}}
+function signup(){let uid=document.getElementById('uid').value.trim(), phone=document.getElementById('phone').value.trim(), pass=document.getElementById('pass').value.trim(); if(!uid||!phone||!pass){document.getElementById('msg').innerText='Fill all 3 columns';return;} localStorage.setItem('user_'+uid, JSON.stringify({phone:phone,pass:pass})); document.getElementById('msg').style.color='#4ade80'; document.getElementById('msg').innerText='Account created! Now Login';}
+function login(){let uid=document.getElementById('uid').value.trim(), pass=document.getElementById('pass').value.trim(); let saved=JSON.parse(localStorage.getItem('user_'+uid)||'null'); if(saved && saved.pass===pass){ localStorage.setItem('loggedIn',uid); document.getElementById('welcome').innerText=uid; showPage('page3'); renderNotes(); } else document.getElementById('msg').innerText='Wrong User ID or Password';}
+function sendCode(){let uid=document.getElementById('fuid').value.trim(), phone=document.getElementById('fphone').value.trim(); let saved=JSON.parse(localStorage.getItem('user_'+uid)||'null'); if(!saved || saved.phone!==phone){ document.getElementById('fmsg').style.color='#f87171'; document.getElementById('fmsg').innerText='User ID / Phone not matched'; return; } tempCode=Math.floor(1000+Math.random()*9000).toString(); document.getElementById('fmsg').style.color='#4ade80'; document.getElementById('fmsg').innerText='Demo SMS Code: '+tempCode;}
+function resetPass(){let uid=document.getElementById('fuid').value.trim(), code=document.getElementById('fcode').value.trim(), newpass=document.getElementById('newpass').value.trim(); if(code!==tempCode){ document.getElementById('fmsg').style.color='#f87171'; document.getElementById('fmsg').innerText='Wrong Code'; return; } let saved=JSON.parse(localStorage.getItem('user_'+uid)); saved.pass=newpass; localStorage.setItem('user_'+uid, JSON.stringify(saved)); document.getElementById('fmsg').style.color='#4ade80'; document.getElementById('fmsg').innerText='Password Reset! Go to Login';}
+function logout(){ localStorage.removeItem('loggedIn'); showPage('page1'); }
+function getNotes(){ return JSON.parse(localStorage.getItem('notes_'+localStorage.getItem('loggedIn'))||'[]'); }
+function saveNotes(n){ localStorage.setItem('notes_'+localStorage.getItem('loggedIn'), JSON.stringify(n)); }
+function addNote(){let t=document.getElementById('ntitle').value.trim(), b=document.getElementById('nbody').value.trim(); let file=document.getElementById('nphoto').files[0]; if(!t && !b && !file) return; let save=(img)=>{let notes=getNotes(); notes.unshift({id:Date.now(),t:t||'Untitled',b:b,img:img||'',rating:0}); saveNotes(notes); document.getElementById('ntitle').value=''; document.getElementById('nbody').value=''; document.getElementById('nphoto').value=''; renderNotes();}; if(file){let r=new FileReader(); r.onload=()=>save(r.result); r.readAsDataURL(file);} else save('');}
+function delNote(id){ saveNotes(getNotes().filter(n=>n.id!==id)); renderNotes(); }
+function rateNote(id,rating){let notes=getNotes(); let note=notes.find(n=>n.id===id); if(note){ note.rating=rating; saveNotes(notes); renderNotes(); }}
+function renderNotes(){let notes=getNotes(); document.getElementById('notes').innerHTML=notes.length?notes.map(n=>{let stars=[1,2,3,4,5].map(s=>`<span class="star ${n.rating>=s?'active':''}" onclick="rateNote(${n.id},${s})">★</span>`).join(''); return `<div class="note"><b>${n.t}</b><p>${n.b}</p>${n.img?`<img src="${n.img}" style="width:100%;border-radius:8px;margin:8px 0">`:''}<div>${stars} <small>(${n.rating||0}/5)</small></div><button class="del" onclick="delNote(${n.id})">Delete</button></div>`;}).join(''):'<p>No notes yet</p>';}
+function rateApp(n){myRating=n; document.querySelectorAll('#appStars .bigstar').forEach((s,i)=>s.classList.toggle('active', i<n)); document.getElementById('appRateMsg').innerText = n>=4 ? 'Thank you! You rated '+n+' stars' : 'Thanks! Tell us how to improve';}
+function saveFeedback(){if(!myRating){ alert('Please tap stars first'); return; } let fb=document.getElementById('feedback').value.trim(); let all=JSON.parse(localStorage.getItem('app_ratings')||'[]'); all.push({rating:myRating, feedback:fb, date:Date.now()}); localStorage.setItem('app_ratings', JSON.stringify(all)); document.getElementById('appRateMsg').innerText='Feedback saved! Thank you'; document.getElementById('feedback').value=''; showAvg();}
+function showAvg(){let all=JSON.parse(localStorage.getItem('app_ratings')||'[]'); if(all.length){let avg=(all.reduce((a,b)=>a+b.rating,0)/all.length).toFixed(1); document.getElementById('avgRating').innerText='⭐ '+avg+' / 5  •  '+all.length+' ratings';}}
+function shareApp(){let text='Try AS Vault Note - Your Notes, Safe & Secure! https://akshaybvbananki.github.io/asvaultnote/'; if(navigator.share){ navigator.share({title:'AS Vault Note', text:text}); } else { navigator.clipboard.writeText(text); alert('Link copied! Share on WhatsApp'); }}
+showAvg();
+let logged=localStorage.getItem('loggedIn'); if(logged){ document.getElementById('welcome').innerText=logged; showPage('page3'); renderNotes(); }
+if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js'); }
+</script>
+</body>
+</html>

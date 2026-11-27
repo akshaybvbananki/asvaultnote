@@ -3,6 +3,10 @@
 <head>
 <title>AS Vault Note</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="manifest" href="manifest.json">
+<script>
+if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js'); }
+</script>
 <style>
 body{font-family:sans-serif;text-align:center;padding:20px;background:#0f172a;color:#fff;margin:0}
 .btn{background:#2563eb;color:white;padding:12px 24px;border-radius:8px;border:none;cursor:pointer;font-size:16px;width:100%;margin:6px 0}
@@ -64,6 +68,7 @@ input{width:100%;padding:12px;margin:8px 0;border:1px solid #334155;border-radiu
 <div class="card">
 <input id="ntitle" placeholder="Note title">
 <input id="nbody" placeholder="Write your note...">
+<input type="file" id="nphoto" accept="image/*" style="margin:8px 0">
 <button class="btn" onclick="addNote()">+ Add Note</button>
 </div>
 <div id="notes" style="max-width:400px;margin:auto"></div>
@@ -102,9 +107,36 @@ function resetPass(){
 function logout(){ localStorage.removeItem('loggedIn'); showPage('page1'); }
 function getNotes(){ return JSON.parse(localStorage.getItem('notes_'+localStorage.getItem('loggedIn'))||'[]'); }
 function saveNotes(n){ localStorage.setItem('notes_'+localStorage.getItem('loggedIn'), JSON.stringify(n)); }
-function addNote(){ let t=document.getElementById('ntitle').value.trim(), b=document.getElementById('nbody').value.trim(); if(!t&&!b) return; let notes=getNotes(); notes.unshift({id:Date.now(),t:t||'Untitled',b:b}); saveNotes(notes); document.getElementById('ntitle').value=''; document.getElementById('nbody').value=''; renderNotes(); }
+function addNote(){
+  let t=document.getElementById('ntitle').value.trim(), b=document.getElementById('nbody').value.trim();
+  let file=document.getElementById('nphoto').files[0];
+  if(!t && !b && !file) return;
+  let save=(img)=>{
+    let notes=getNotes();
+    notes.unshift({id:Date.now(),t:t||'Untitled',b:b,img:img||''});
+    saveNotes(notes);
+    document.getElementById('ntitle').value='';
+    document.getElementById('nbody').value='';
+    document.getElementById('nphoto').value='';
+    renderNotes();
+  };
+  if(file){
+    let r=new FileReader();
+    r.onload=()=>save(r.result);
+    r.readAsDataURL(file);
+  } else save('');
+}
 function delNote(id){ saveNotes(getNotes().filter(n=>n.id!==id)); renderNotes(); }
-function renderNotes(){ let notes=getNotes(); document.getElementById('notes').innerHTML=notes.length?notes.map(n=>`<div class="note"><b>${n.t}</b><p>${n.b}</p><button class="del" onclick="delNote(${n.id})">Delete</button></div>`).join(''):'<p>No notes yet</p>'; }
+function renderNotes(){
+  let notes=getNotes();
+  document.getElementById('notes').innerHTML=notes.length?notes.map(n=>`
+    <div class="note">
+      <b>${n.t}</b>
+      <p>${n.b}</p>
+      ${n.img?`<img src="${n.img}" style="width:100%;border-radius:8px;margin:8px 0">`:''}
+      <button class="del" onclick="delNote(${n.id})">Delete</button>
+    </div>`).join(''):'<p>No notes yet</p>';
+}
 let logged=localStorage.getItem('loggedIn'); if(logged){ document.getElementById('welcome').innerText=logged; showPage('page3'); renderNotes(); }
 </script>
 </body>

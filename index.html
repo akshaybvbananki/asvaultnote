@@ -17,6 +17,11 @@ input{width:100%;padding:12px;margin:8px 0;border:1px solid #334155;border-radiu
 .del{background:#ef4444;color:white;border:none;padding:6px 12px;border-radius:6px}
 .pass-wrap{position:relative}
 .eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:20px}
+.rate-box{background:#1e293b;max-width:400px;margin:20px auto;padding:20px;border-radius:12px}
+.bigstar{font-size:32px;cursor:pointer;color:#64748b}
+.bigstar.active{color:#facc15}
+.star{cursor:pointer;font-size:22px;color:#64748b}
+.star.active{color:#facc15}
 </style>
 </head>
 <body>
@@ -26,6 +31,21 @@ input{width:100%;padding:12px;margin:8px 0;border:1px solid #334155;border-radiu
 <p>Akshay B V Bananki</p>
 <p>Your Notes, Safe & Secure</p>
 <button class="btn" onclick="showPage('page2')">Download App</button>
+<div class="rate-box">
+<h3 style="color:#38bdf8;">Rate AS Vault Note</h3>
+<div id="appStars">
+<span class="bigstar" onclick="rateApp(1)">★</span>
+<span class="bigstar" onclick="rateApp(2)">★</span>
+<span class="bigstar" onclick="rateApp(3)">★</span>
+<span class="bigstar" onclick="rateApp(4)">★</span>
+<span class="bigstar" onclick="rateApp(5)">★</span>
+</div>
+<p id="appRateMsg" style="color:#4ade80"></p>
+<input id="feedback" placeholder="Your feedback (optional)">
+<button class="btn" onclick="saveFeedback()">Submit Feedback</button>
+<button class="btn" style="background:#10b981" onclick="shareApp()">📤 Share App</button>
+<p id="avgRating" style="color:#facc15"></p>
+</div>
 </div>
 
 <div id="page2" class="hidden">
@@ -68,76 +88,4 @@ input{width:100%;padding:12px;margin:8px 0;border:1px solid #334155;border-radiu
 <div class="card">
 <input id="ntitle" placeholder="Note title">
 <input id="nbody" placeholder="Write your note...">
-<input type="file" id="nphoto" accept="image/*" style="margin:8px 0">
-<button class="btn" onclick="addNote()">+ Add Note</button>
-</div>
-<div id="notes" style="max-width:400px;margin:auto"></div>
-</div>
-
-<script>
-let tempCode="";
-function showPage(id){['page1','page2','pageForgot','page3'].forEach(p=>document.getElementById(p).classList.add('hidden'));document.getElementById(id).classList.remove('hidden');}
-function togglePass(id,el){ let inp=document.getElementById(id); if(inp.type==='password'){inp.type='text'; el.innerText='🙈';} else {inp.type='password'; el.innerText='👁️';} }
-function signup(){
-  let uid=document.getElementById('uid').value.trim(), phone=document.getElementById('phone').value.trim(), pass=document.getElementById('pass').value.trim();
-  if(!uid||!phone||!pass){document.getElementById('msg').innerText='Fill all 3 columns';return;}
-  localStorage.setItem('user_'+uid, JSON.stringify({phone:phone,pass:pass}));
-  document.getElementById('msg').style.color='#4ade80'; document.getElementById('msg').innerText='Account created! Now Login';
-}
-function login(){
-  let uid=document.getElementById('uid').value.trim(), pass=document.getElementById('pass').value.trim();
-  let saved=JSON.parse(localStorage.getItem('user_'+uid)||'null');
-  if(saved && saved.pass===pass){ localStorage.setItem('loggedIn',uid); document.getElementById('welcome').innerText=uid; showPage('page3'); renderNotes(); }
-  else document.getElementById('msg').innerText='Wrong User ID or Password';
-}
-function sendCode(){
-  let uid=document.getElementById('fuid').value.trim(), phone=document.getElementById('fphone').value.trim();
-  let saved=JSON.parse(localStorage.getItem('user_'+uid)||'null');
-  if(!saved || saved.phone!==phone){ document.getElementById('fmsg').style.color='#f87171'; document.getElementById('fmsg').innerText='User ID / Phone not matched'; return; }
-  tempCode=Math.floor(1000+Math.random()*9000).toString();
-  document.getElementById('fmsg').style.color='#4ade80';
-  document.getElementById('fmsg').innerText='Demo SMS Code (real SMS needs backend): '+tempCode;
-}
-function resetPass(){
-  let uid=document.getElementById('fuid').value.trim(), code=document.getElementById('fcode').value.trim(), newpass=document.getElementById('newpass').value.trim();
-  if(code!==tempCode){ document.getElementById('fmsg').style.color='#f87171'; document.getElementById('fmsg').innerText='Wrong Code'; return; }
-  let saved=JSON.parse(localStorage.getItem('user_'+uid)); saved.pass=newpass; localStorage.setItem('user_'+uid, JSON.stringify(saved));
-  document.getElementById('fmsg').style.color='#4ade80'; document.getElementById('fmsg').innerText='Password Reset! Go to Login';
-}
-function logout(){ localStorage.removeItem('loggedIn'); showPage('page1'); }
-function getNotes(){ return JSON.parse(localStorage.getItem('notes_'+localStorage.getItem('loggedIn'))||'[]'); }
-function saveNotes(n){ localStorage.setItem('notes_'+localStorage.getItem('loggedIn'), JSON.stringify(n)); }
-function addNote(){
-  let t=document.getElementById('ntitle').value.trim(), b=document.getElementById('nbody').value.trim();
-  let file=document.getElementById('nphoto').files[0];
-  if(!t && !b && !file) return;
-  let save=(img)=>{
-    let notes=getNotes();
-    notes.unshift({id:Date.now(),t:t||'Untitled',b:b,img:img||''});
-    saveNotes(notes);
-    document.getElementById('ntitle').value='';
-    document.getElementById('nbody').value='';
-    document.getElementById('nphoto').value='';
-    renderNotes();
-  };
-  if(file){
-    let r=new FileReader();
-    r.onload=()=>save(r.result);
-    r.readAsDataURL(file);
-  } else save('');
-}
-function delNote(id){ saveNotes(getNotes().filter(n=>n.id!==id)); renderNotes(); }
-function renderNotes(){
-  let notes=getNotes();
-  document.getElementById('notes').innerHTML=notes.length?notes.map(n=>`
-    <div class="note">
-      <b>${n.t}</b>
-      <p>${n.b}</p>
-      ${n.img?`<img src="${n.img}" style="width:100%;border-radius:8px;margin:8px 0">`:''}
-      <button class="del" onclick="delNote(${n.id})">Delete</button>
-    </div>`).join(''):'<p>No notes yet</p>';
-}
-let logged=localStorage.getItem('loggedIn'); if(logged){ document.getElementById('welcome').innerText=logged; showPage('page3'); renderNotes(); }
-</script>
-</body>
-</html>
+<input type
